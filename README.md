@@ -43,7 +43,11 @@ MY_WHATSAPP_NUMBER=whatsapp:+your_number
 # Local Development
 
 1. **Start Flask Server:** Launch the Flask server locally to handle incoming messages and responses.
-2. **Expose Server with Ngrok:** Use Ngrok to expose the local server to the internet. This step is necessary for Twilio to communicate with your Flask application during testing.
+```bash
+python3 app.py
+```
+2. **Expose Server with Ngrok:** Use [Ngrok](https://ngrok.com/) to expose the local server to the internet. This step is necessary for Twilio to communicate with your Flask application during testing.
+
 3. **Configure Twilio WhatsApp Sandbox:** Set the Ngrok URL as the webhook endpoint in the Twilio WhatsApp Sandbox settings. This enables Twilio to forward WhatsApp messages to your Flask application.
 
 # Deployment
