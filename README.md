@@ -5,7 +5,8 @@ Welcome to the WhatsApp Exam Helper Bot! This project aims to assist students in
 # Usage
 
 **Interacting with the Bot:**
-- Every 2 hours (deafult, changeable ofc !) the bot will send you a question on the topic you've selected
+- Every 2 hours (adjustable, of course!), the bot will send you a question based on the selected prompt in the `app.py` file (using the `generate_question` method).
+- Just change the prompt to whatever you want it to be.
 - Respond to the question by sending a message to the WhatsApp number associated with the Twilio Sandbox.
 - The bot provides feedback on whether your answer is right or wrong.
 
