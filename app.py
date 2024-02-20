@@ -10,10 +10,19 @@ import time
 import random
 from threading import Thread
 
+from models import db, User
+from helper import get_or_add_user, get_user_name
+
+
+
 
 load_dotenv() #  Load environment variables from .env file
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///users.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
 
 twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID') # Your Account SID from twilio.com/console
 twilio_auth_token = os.getenv('TWILIO_AUTH_TOKEN') # Your Auth Token from twilio.com/console
@@ -25,7 +34,7 @@ openai_api_key = os.getenv('OPENAI_API_KEY') # Your OpenAI API key
 
 twilio_client = Client(twilio_account_sid, twilio_auth_token) 
 
-client = OpenAI(api_key=openai_api_key) 
+client = OpenAI(api_key=openai_api_key)
 
 
 # Generate a question about computer science
@@ -67,7 +76,10 @@ def run_scheduler():
 
 
 # Generate a response to a user input
-def generate_response(user_input, retry_count=3):
+def generate_response(user_input, user_name="your name", retry_count=3):
+
+    if user_input.lower() == 'test' or user_input.lower() == 'hi':
+        return f"Hello {user_name}! How can I help you today?"
 
     initial_wait_time = 1 
 
@@ -98,21 +110,44 @@ def generate_response(user_input, retry_count=3):
             else:
                 print("Maximum number of attempts reached, request failed.")
 
-    return "Mmh, something went wrong :/ Try again later."
+    return f"Mmh, something went wrong :/ Try again later, {user_name}."
 
 
 # Webhook for incoming messages
 
 @app.route('/webhook', methods=['POST']) 
 def webhook():
-
     try:
-        incoming_msg = request.values.get('Body', '').lower() 
+        incoming_msg_original = request.values.get('Body', '')
+        incoming_msg = incoming_msg_original.lower()
         sender = request.values.get('From') # The sender's phone number
+        response_msg = "" 
 
-        response = generate_response(incoming_msg) 
+        if incoming_msg.lower().startswith('my name is '):
+            user_name = incoming_msg_original[len('my name is '):].strip()
+            get_or_add_user(sender, user_name)
+            response_msg += f"Nice to meet you, {user_name}!"
 
-        send_message(response, recipient=sender)
+            additional_msg_index = len('my name is ') + len(user_name)
+
+            if len(incoming_msg) > additional_msg_index:
+
+                additional_msg = incoming_msg_original[additional_msg_index:].strip()
+
+                if additional_msg:
+                    response_msg += " " + generate_response(additional_msg, user_name)
+
+            else:
+                response_msg += " How can I help you today?"
+        else:
+            user_name = get_user_name(sender)
+            if not user_name:
+                response_msg = "Please tell me your name by typing: 'My name is <your name>'."
+            else:
+                response_msg = generate_response(incoming_msg_original, user_name)
+                    
+
+        send_message(response_msg, recipient=sender)
         return "OK", 200
     
     except Exception as e:
@@ -122,6 +157,11 @@ def webhook():
 
 
 if __name__ == '__main__':
+
+    # Creates the database tables
+    with app.app_context():
+        db.create_all()
+
     scheduler_thread = Thread(target=run_scheduler)
     scheduler_thread.start()
 

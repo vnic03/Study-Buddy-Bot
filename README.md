@@ -39,7 +39,10 @@ TWILIO_ACCOUNT_SID=your_twilio_account_sid
 TWILIO_AUTH_TOKEN=your_twilio_auth_token
 OPENAI_API_KEY=your_openai_api_key
 MY_WHATSAPP_NUMBER=whatsapp:+your_number
+SQLALCHEMY_DATABASE_URI=sqlite:///users.db
 ```
+3. **SQLALCHEMY_DATABASE_URI**: specifies the path to the SQLite database. The default path is set to use users.db in the project root.
+4. **Completion**: Running `python3 app.py` initializes the database, and the bot will prompt you for your name. All data is stored locally on your computer, ensuring your information remains private and secure.
 
 # Local Development
 
