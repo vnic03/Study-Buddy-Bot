@@ -59,7 +59,7 @@ def run_scheduler():
         question = generate_question()
         send_message(question)
     
-    schedule.every(2).hours.do(send_question)
+    schedule.every(2).hours.do(send_question) # Change the interval to your needs
 
     while True:
         schedule.run_pending()
