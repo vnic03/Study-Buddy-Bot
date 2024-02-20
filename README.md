@@ -1,4 +1,4 @@
-# Studdy-Buddy
+# Study-Buddy
 
 Welcome to the WhatsApp Exam Helper Bot! This project aims to assist students in their exam preparation by providing a WhatsApp bot that generates questions on various topics and offers informative responses using artificial intelligence.
 
