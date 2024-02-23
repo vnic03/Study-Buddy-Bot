@@ -11,9 +11,7 @@ import random
 from threading import Thread
 
 from models import db, User
-from helper import get_or_add_user, get_user_name
-
-
+from helper import get_or_add_user, get_user_name, add_points, add_achievement
 
 
 load_dotenv() #  Load environment variables from .env file
@@ -113,6 +111,34 @@ def generate_response(user_input, user_name="your name", retry_count=3):
     return f"Mmh, something went wrong :/ Try again later, {user_name}."
 
 
+
+# Handle user interaction with points and achievements
+def handle_user_interaction(sender, points=10, achievement_threshold=100):
+
+    current_points = add_points(sender, points)
+    response_msg = f"You earned {points} points! You now have {current_points} points."
+
+    if current_points >= achievement_threshold:
+        achievement_name = "100 Points Club!"
+
+        add_achievement(sender, achievement_name)
+
+        response_msg += f" Congratulations, you've unlocked the '{achievement_name}' achievement!"
+    
+    return response_msg
+
+
+def process_additional_message(sender, msg):
+
+    user_name = get_user_name(sender)
+    response_msg = generate_response(msg, user_name)
+
+    return response_msg
+        
+
+# Prefix for the user's name
+NAME_PREFIX = 'my name is '
+
 # Webhook for incoming messages
 
 @app.route('/webhook', methods=['POST']) 
@@ -123,28 +149,35 @@ def webhook():
         sender = request.values.get('From') # The sender's phone number
         response_msg = "" 
 
-        if incoming_msg.lower().startswith('my name is '):
-            user_name = incoming_msg_original[len('my name is '):].strip()
+        if incoming_msg.lower().startswith(NAME_PREFIX):
+            user_name = incoming_msg_original[len(NAME_PREFIX):].strip()
             get_or_add_user(sender, user_name)
             response_msg += f"Nice to meet you, {user_name}!"
 
-            additional_msg_index = len('my name is ') + len(user_name)
+            additional_msg_index = len(NAME_PREFIX) + len(user_name)
 
             if len(incoming_msg) > additional_msg_index:
 
                 additional_msg = incoming_msg_original[additional_msg_index:].strip()
 
                 if additional_msg:
-                    response_msg += " " + generate_response(additional_msg, user_name)
+                    response_msg += " " + process_additional_message(sender, additional_msg)
 
             else:
                 response_msg += " How can I help you today?"
+
+
+            interaction_response = handle_user_interaction(sender)
+            response_msg += " " + interaction_response
         else:
             user_name = get_user_name(sender)
             if not user_name:
                 response_msg = "Please tell me your name by typing: 'My name is <your name>'."
             else:
                 response_msg = generate_response(incoming_msg_original, user_name)
+
+                interaction_response = handle_user_interaction(sender)
+                response_msg += " " + interaction_response
                     
 
         send_message(response_msg, recipient=sender)

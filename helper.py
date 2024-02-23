@@ -21,3 +21,22 @@ def get_user_name(whatsapp_number):
     if user:
         return user.name
     return None
+
+# Ads points to a user
+def add_points(user_whatsapp_number, points):
+    user = User.query.filter_by(whatsapp_number=user_whatsapp_number).first()
+    if user:
+        user.points += points
+        db.session.commit()
+        return user.points
+    return None
+
+# Adds an achievement to a user
+def add_achievement(user_whatsapp_number, achievement):
+    user = User.query.filter_by(whatsapp_number=user_whatsapp_number).first()
+    if user:
+        if user.achievements:
+            user.achievements += f",{achievement}"
+        else:
+            user.achievements = achievement
+        db.session.commit()
